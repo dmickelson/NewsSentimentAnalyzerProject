@@ -34,16 +34,16 @@ Display [color: lightcoral] {
 }
 
 // Define the flow
-Start [shape: oval, icon: play] > Select News Sources
+Start [shape: oval, icon: python] > Select News Sources
 
-Select News Sources > Scrape Source 1
+Select News Sources > Scrape Source 1: News Source 1
 Scrape Source 1 > Source 1 Headlines and Stories 
 Source 1 Headlines and Stories  > Vectorize Headlines 1
 Vectorize Headlines 1 > Perform Sentiment Analysis 1
 Perform Sentiment Analysis 1 > Store in Pinecone 1
 Store in Pinecone 1 > Pull Similar Headlines
 
-Select News Sources > Scrape Source ...
+Select News Sources > Scrape Source ... : Multiple Sources
 Scrape Source ... > Source ... Headlines and Stories 
 Source ... Headlines and Stories  > Vectorize Headlines ...
 Vectorize Headlines ... > Perform Sentiment Analysis ...
