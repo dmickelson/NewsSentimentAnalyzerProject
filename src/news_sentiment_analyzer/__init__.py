@@ -1,0 +1,1 @@
+from .news_sentiment_analyzer import NewsSentimentAnalyzer

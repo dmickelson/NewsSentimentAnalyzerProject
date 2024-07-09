@@ -1,1 +1,5 @@
 .venv/
+tests/__pycache__/
+news_sentiment_analyzer/__pycache__/
+src/news_sentiment_analyzer/__pycache__/
+

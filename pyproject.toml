@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "news_sentiment_analyzer"
+dynamic = ["version"]
+description = "A tool for analyzing sentiment in news articles"
+readme = "README.md"
+requires-python = ">=3.7"
+license = {file = "LICENSE"}
+keywords = ["news", "sentiment", "analysis"]
+authors = [
+  {name = "David Mickelson", email = "davidpmickelson@gmail.com"},
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+]
+
+dependencies = [
+    "tqdm"
+    "pyyaml"
+    "pandas"
+    "gradio"
+    "logging"
+    "beautifulsoup"
+    "pinecone"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "pytest-cov",
+]
+
+[tool.setuptools]
+packages = ["news_sentiment_analyzer"]
+package-dir = {"" = "src"}
+
+[tool.setuptools_scm]
+write_to = "src/news_sentiment_analyzer/_version.py"
+
+[tool.pytest.ini_options]
+addopts = "-v"
+testpaths = ["tests"]
+pythonpath = ["src"]
