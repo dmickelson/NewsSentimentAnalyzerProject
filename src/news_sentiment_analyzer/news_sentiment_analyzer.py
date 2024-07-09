@@ -15,6 +15,7 @@ class NewsSentimentAnalyzer:
             config_path = Path(__file__).parents[2] / "logging_config.yaml"
         self.load_logging_config(config_path)
         self.logger = logging.getLogger(__name__)
+        self.logger.debug(f"Initiating Class {__name__}")
         self.headlines = [
             "Breaking news: Major event unfolds",
             "Economy shows signs of recovery",

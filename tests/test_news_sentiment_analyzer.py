@@ -4,6 +4,8 @@ import yaml
 import logging.config
 from src.news_sentiment_analyzer import NewsSentimentAnalyzer
 
+# ? pytest -vs tests/test_news_sentiment_analyzer.py
+
 # Get the root directory of the project
 ROOT_DIR = Path(__file__).parents[1]
 
@@ -20,5 +22,3 @@ def test_news_sentiment_analyzer_initialization():
     analyzer = NewsSentimentAnalyzer()
     assert analyzer is not None
     # Add more assertions as needed
-
-# Add
