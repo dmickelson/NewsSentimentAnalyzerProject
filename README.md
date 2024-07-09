@@ -1,8 +1,16 @@
 <p><a target="_blank" href="https://app.eraser.io/workspace/Ni40E1o4VIaUCvKZWyhj" id="edit-in-eraser-github-link"><img alt="Edit in Eraser" src="https://firebasestorage.googleapis.com/v0/b/second-petal-295822.appspot.com/o/images%2Fgithub%2FOpen%20in%20Eraser.svg?alt=media&amp;token=968381c8-a7e7-472a-8ed6-4a6626da5501"></a></p>
 
-Note
 
-- Scraping RSS News Feeds to avoid any scraping policy issues
+
+# To Run
+When you run the script, it will start a local server and provide a URL to access the UI in your web browser. Users can then select news sources and click "Submit" to see the analysis results.
+
+
+
+> Notes:
+
+> * Scraping RSS News Feeds to avoid any scraping policy issues
+
 
 
 
