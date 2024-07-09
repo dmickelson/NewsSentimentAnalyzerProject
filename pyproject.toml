@@ -24,6 +24,10 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
 ]
 
+[urls]
+homepage = "https://github.com/dmickelson"
+repository = "https://github.com/dmickelson/NewsSentimentAnalyzerProject"
+
 dependencies = [
     "tqdm"
     "pyyaml"
@@ -32,6 +36,8 @@ dependencies = [
     "logging"
     "beautifulsoup"
     "pinecone"
+    "transformers"
+    "torch"
 ]
 
 [project.optional-dependencies]
