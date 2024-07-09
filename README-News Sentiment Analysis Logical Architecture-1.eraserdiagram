@@ -1,0 +1,52 @@
+cloud-architecture-diagram
+
+title News Sentiment Analysis Logical Architecture
+styleMode: shadow
+colorMode bold
+direction right
+
+
+News Sentiment Analysis [icon: python]{
+  Gather Data [icon: python]
+  Analyze Data [icon: python]
+  Store Data [icon: python]
+  Gather Results [icon: python]
+}
+
+UI [color: lightcoral]{
+  User [icon: user]
+  GradioUI[icon: python]
+}
+
+News Webpage Scraper [color: yellow] {
+  Scrape RSS [icon: selenium]
+  Headline, News [icon: data]
+}
+
+Sentiment Analyser {
+  HuggingFace [icon: tensorflow]
+}
+
+PineconeLib [color: blue]{
+  Vectorize Headline [icon: pinecone]
+  PineconeDB [icon: pinecone]
+}
+
+// Define the flows
+User > GradioUI : Select News Sources
+GradioUI > Gather Data: List of News Sources
+
+Gather Data > Analyze Data > Store Data > Gather Results
+Gather Data > News Webpage Scraper: For each News Source
+News Webpage Scraper > Gather Data: Article
+
+Analyze Data <> Sentiment Analyser : "Article/Sentiment"
+
+Store Data > PineconeLib: Article, Sentiment
+
+Gather Results > PineconeLib
+PineconeLib > Gather Results
+Gather Results > UI : Analysis Results
+
+
+
