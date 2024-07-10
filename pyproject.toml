@@ -34,10 +34,12 @@ dependencies = [
     "pandas"
     "gradio"
     "logging"
-    "beautifulsoup"
+    "bs4"
     "pinecone"
     "transformers"
     "torch"
+    "requests"
+    "lxml"
 ]
 
 [project.optional-dependencies]

@@ -2,6 +2,7 @@ import gradio as gr
 import pandas as pd
 import random
 import time
+from typing import Union
 import logging
 import logging.config
 import yaml
@@ -10,7 +11,7 @@ from pathlib import Path
 
 
 class NewsSentimentAnalyzer:
-    def __init__(self, config_path=None):
+    def __init__(self, config_path: Union[str, Path] = None):
         if config_path is None:
             config_path = Path(__file__).parents[2] / "logging_config.yaml"
         self.load_logging_config(config_path)
@@ -32,16 +33,44 @@ class NewsSentimentAnalyzer:
         ]
         self.sentiments = ["Positive", "Negative", "Neutral"]
 
-    def load_logging_config(self, config_path):
+    def load_logging_config(self, config_path: Union[str, Path]):
+        """
+        Load the logging configuration from a YAML file.
+
+        Args:
+            config_path (Union[str, Path]): Path to the logging configuration file.
+
+        Raises:
+            FileNotFoundError: If the configuration file is not found.
+            yaml.YAMLError: If there's an error parsing the YAML file.
+        """
         config_path = Path(config_path)
         if not config_path.is_file():
+            self.logger.error(f"Logging config file not found: {config_path}")
             raise FileNotFoundError(
                 f"Logging config file not found: {config_path}")
-        with open(config_path, 'r') as f:
-            config = yaml.safe_load(f.read())
-            logging.config.dictConfig(config)
+
+        try:
+            with open(config_path, 'r') as f:
+                log_config = yaml.safe_load(f)
+                logging.config.dictConfig(log_config)
+        except yaml.YAMLError as ex:
+            self.logger.exception(
+                f"Error parsing logging config file: {str(ex)}")
+            raise yaml.YAMLError(
+                f"Error parsing logging config file: {str(ex)}")
 
     def analyze_news(self, sources, progress=gr.Progress()):
+        """
+        Analyze news from given sources and yield results progressively.
+
+        Args:
+            sources (List[str]): List of news sources to analyze.
+            progress (gr.Progress, optional): Gradio progress bar.
+
+        Yields:
+            pd.DataFrame: DataFrame containing analysis results.
+        """
         self.logger.info(f"Starting analysis for sources: {sources}")
         results = []
         total_stories = len(sources) * 5  # 5 stories per source
@@ -86,6 +115,12 @@ class NewsSentimentAnalyzer:
         yield from self.analyze_news(sources, progress)
 
     def create_interface(self):
+        """
+        Create and return the Gradio interface for the news sentiment analysis.
+
+        Returns:
+            gr.Interface: Gradio interface object.
+        """
         return gr.Interface(
             fn=self.news_sentiment_analysis,
             inputs=[

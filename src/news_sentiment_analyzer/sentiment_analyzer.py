@@ -48,9 +48,9 @@ class SentimentAnalyzer:
             # Create the sentiment analysis pipeline
             self.nlp = pipeline('sentiment-analysis',
                                 model=self.model, tokenizer=self.tokenizer)
-        except Exception as e:
+        except Exception as ex:
             self.logger.error(
-                f"Error loading model or creating pipeline: {str(e)}")
+                f"Error loading model or creating pipeline: {str(ex)}")
             raise
 
     def load_logging_config(self, config_path: Union[str, Path]):
@@ -72,13 +72,13 @@ class SentimentAnalyzer:
 
         try:
             with open(config_path, 'r') as f:
-                config = yaml.safe_load(f)
-                logging.config.dictConfig(config)
-        except yaml.YAMLError as e:
+                log_config = yaml.safe_load(f)
+                logging.config.dictConfig(log_config)
+        except yaml.YAMLError as ex:
             self.logger.exception(
-                f"Error parsing logging config file: {str(e)}")
+                f"Error parsing logging config file: {str(ex)}")
             raise yaml.YAMLError(
-                f"Error parsing logging config file: {str(e)}")
+                f"Error parsing logging config file: {str(ex)}")
 
     def get_sentiment(self, text: Union[str, List[str]]) -> Union[Dict, List[Dict]]:
         """
@@ -108,8 +108,9 @@ class SentimentAnalyzer:
                 return [self._process_single_text(t) for t in text]
             else:
                 raise ValueError("Input must be a string or a list of strings")
-        except Exception as e:
-            self.logger.exception(f"Error during sentiment analysis: {str(e)}")
+        except Exception as ex:
+            self.logger.exception(
+                f"Error during sentiment analysis: {str(ex)}")
             raise
 
     def _process_single_text(self, text: str) -> Dict:
@@ -132,10 +133,10 @@ class SentimentAnalyzer:
             raise ValueError(
                 f"Input text is too long. Maximum length is {self.model.config.max_position_embeddings} tokens.")
         result = self.nlp(text)[0]
-        json_result = {
+        dict_result = {
             'text': text,
             'sentiment': result['label'],
             'confidence': result['score']
         }
-        self.logger.debug(f'result: {json_result}')
-        return json_result
+        self.logger.debug(f'result: {dict_result}')
+        return dict_result
