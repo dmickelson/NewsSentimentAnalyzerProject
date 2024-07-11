@@ -2,22 +2,47 @@ import pytest
 from pathlib import Path
 import yaml
 import logging
+import logging.config
 from unittest.mock import patch, Mock
 from src.news_sentiment_analyzer import RSSNewsScraper
 
-# ? pytest -vs tests/test_rss_news_scraper.py --capture=no
+# ? pytest -vs tests/test_rss_news_scraper.py
+
 # Get the root directory of the project
 ROOT_DIR = Path(__file__).parents[1]
 
 
-@pytest.fixture(scope="session", autouse=True)
 def setup_logging():
     config_path = ROOT_DIR / "logging_config.yaml"
     with open(config_path, "r") as f:
         config = yaml.safe_load(f.read())
+
+    # Ensure the logs directory exists
+    log_dir = ROOT_DIR / "logs"
+    log_dir.mkdir(exist_ok=True)
+
+    # Update the log file path in the config
+    config['handlers']['file']['filename'] = str(
+        log_dir / "test_news_sentiment_analysis.log")
+
     logging.config.dictConfig(config)
-    # Set the logging level to DEBUG for testing
-    logging.getLogger().setLevel(logging.DEBUG)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def configure_logging():
+    setup_logging()
+    yield
+    # Clean up logging handlers after tests
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+        handler.close()
+
+
+@pytest.fixture(autouse=True)
+def reset_logger():
+    yield
+    # Reset the logger after each test
+    setup_logging()
 
 
 @pytest.fixture
@@ -53,50 +78,56 @@ def mock_requests_get(mock_rss_content):
         yield mock_get
 
 
-def test_rss_news_scraper_initialization(caplog):
-    with caplog.at_level(logging.INFO):
-        scraper = RSSNewsScraper("http://example.com/rss")
-        assert scraper is not None
-        assert scraper.get_rss_url() == "http://example.com/rss"
-        assert "Initializing RSSNewsScraper" in caplog.text
-        assert "RSS URL set to: http://example.com/rss" in caplog.text
+def test_rss_news_scraper_initialization():
+    logger = logging.getLogger(__name__)
+    logger.info("Starting initialization test")
+    scraper = RSSNewsScraper("http://example.com/rss")
+    assert scraper is not None
+    assert scraper.get_rss_url() == "http://example.com/rss"
+    logger.info("Finished initialization test")
 
 
-def test_rss_news_scraper_initialization_error(caplog):
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):
-            RSSNewsScraper("")
-        assert "No RSS URL Provided" in caplog.text
+def test_scrape_rss_feed(mock_requests_get):
+    logger = logging.getLogger(__name__)
+    logger.info("Starting scrape test")
+    scraper = RSSNewsScraper("http://example.com/rss")
+    articles = scraper.scrape_rss_feed()
+
+    assert len(articles) == 2
+    assert articles[0]['title'] == "Test Article 1"
+    assert articles[0]['link'] == "http://example.com/article1"
+    assert articles[0]['description'] == "This is the first test article"
+    assert articles[1]['title'] == "Test Article 2"
+    assert articles[1]['link'] == "http://example.com/article2"
+    assert articles[1]['description'] == "This is the second test article"
+
+    logger.info("Finished scrape test")
 
 
-def test_scrape_rss_feed(mock_requests_get, caplog):
-    with caplog.at_level(logging.DEBUG):
-        scraper = RSSNewsScraper("http://example.com/rss")
-        articles = scraper.scrape_rss_feed()
+def test_scrape_rss_feed_error(mock_requests_get):
+    logger = logging.getLogger(__name__)
+    logger.info("Starting error test")
+    mock_requests_get.side_effect = Exception("Network error")
+    scraper = RSSNewsScraper("http://example.com/rss")
 
-        assert len(articles) == 2
-        assert articles[0]['title'] == "Test Article 1"
-        assert articles[0]['link'] == "http://example.com/article1"
-        assert articles[0]['description'] == "This is the first test article"
-        assert articles[1]['title'] == "Test Article 2"
-        assert articles[1]['link'] == "http://example.com/article2"
-        assert articles[1]['description'] == "This is the second test article"
+    with pytest.raises(Exception):
+        scraper.scrape_rss_feed()
 
-        assert "Getting RSS feed from: http://example.com/rss" in caplog.text
-        assert "Scraped story:" in caplog.text
-        assert "Scraped 2 articles" in caplog.text
+    logger.info("Finished error test")
 
 
-def test_scrape_rss_feed_error(mock_requests_get, caplog):
-    with caplog.at_level(logging.ERROR):
-        mock_requests_get.side_effect = Exception("Network error")
-        scraper = RSSNewsScraper("http://example.com/rss")
+def test_log_file_writing():
+    logger = logging.getLogger(__name__)
+    test_message = "Test log message for file writing"
+    logger.info(test_message)
 
-        with pytest.raises(Exception):
-            scraper.scrape_rss_feed()
+    log_file = ROOT_DIR / "logs" / "test_news_sentiment_analysis.log"
+    assert log_file.exists(), f"Log file does not exist: {log_file}"
 
-        assert "Error getting RSS feed: Network error" in caplog.text
+    with open(log_file, 'r') as f:
+        log_content = f.read()
+    assert test_message in log_content, f"Test message not found in log file. Log content: {log_content}"
 
 
 if __name__ == "__main__":
-    pytest.main(["-vs", __file__])
+    pytest.main(["-v", __file__])

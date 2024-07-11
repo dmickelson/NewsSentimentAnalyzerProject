@@ -14,7 +14,7 @@ handlers:
     level: DEBUG
     formatter: default
     filename: "logs/news_sentiment_analysis.log"
-    mode: "w"
+    mode: "a"
 loggers:
   "":
     level: DEBUG

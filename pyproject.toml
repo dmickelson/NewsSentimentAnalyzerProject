@@ -40,6 +40,7 @@ dependencies = [
     "torch"
     "requests"
     "lxml"
+    "emoji"
 ]
 
 [project.optional-dependencies]
