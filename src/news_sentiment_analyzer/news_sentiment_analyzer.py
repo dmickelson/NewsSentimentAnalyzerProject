@@ -30,21 +30,6 @@ class NewsSentimentAnalyzer:
         # self.load_logging_config(config_path)
         self.logger = logging.getLogger(__name__)
         self.logger.debug(f"Initiating Class {__name__}")
-        self.headlines = [
-            "Breaking news: Major event unfolds",
-            "Economy shows signs of recovery",
-            "New scientific discovery announced",
-            "Sports team wins championship",
-            "Political tensions rise in key region"
-        ]
-        self.stories = [
-            "A significant event has occurred, impacting millions...",
-            "Recent economic indicators suggest a positive trend...",
-            "Scientists have made a groundbreaking discovery in the field of...",
-            "In a thrilling match, the underdog team emerged victorious...",
-            "Diplomatic relations are strained as leaders disagree on..."
-        ]
-        self.sentiments = ["Positive", "Negative", "Neutral"]
 
     # def load_logging_config(self, config_path: Union[str, Path]):
     #     """
@@ -86,31 +71,30 @@ class NewsSentimentAnalyzer:
         """
         analyzer = SentimentAnalyzer()
         results = []
+        progress(0, desc="Starting...")
         total_stories = len(sources) * 10  # 10 stories per source
-        for source in tqdm(iterable=sources, total=len(sources), desc="Processing sources", colour="blue"):
-            # for source in sources:
+        for source in progress.tqdm(iterable=sources, total=len(sources), desc=f"Processing News Sources"):
             self.logger.info(f"Scraping {source}")
-            progress(10 / len(sources), f"Scraping {source}")
             articles = source.scrape_rss_feed()
-            for article in tqdm(articles, desc=f"Analyzing stories from {source}", leave=False):
+            for article in tqdm(articles, desc=f"Analyzing {len(articles)} stories", leave=False):
                 text = article["title"] + ' ' + article["description"]
                 sentiment_results = analyzer.get_sentiment(text)
                 results.append(sentiment_results)
                 self.logger.debug(
                     f"Analyzed story from {source}: {article['title']}")
-                progress((1 * 5 + 1 + 1) / total_stories,
-                         f"Analyzing story {1} from {source}")
                 yield pd.DataFrame(results)
 
         self.logger.info("Analysis complete")
         progress(1.0, "Analysis complete")
-        yield pd.DataFrame(results)
+        # yield pd.DataFrame(results)
+        return pd.DataFrame(results)
 
-    def gather_data(self, sources, progress=gr.Progress()):
+    def gather_data(self, data: pd.DataFrame, progress=gr.Progress()):
         '''
         Gathers the data to be analyzed
         '''
-        pass
+        self.logger.debug("Starting Gathering Data")
+        return
 
     def news_sentiment_analysis(self, cnn: bool = False, abc: bool = False, npr: bool = False, nyt: bool = False, progress=gr.Progress()):
         ''' Get News Articles and Perform Sentiment Analysis'''
@@ -130,13 +114,18 @@ class NewsSentimentAnalyzer:
 
         if not sources:
             self.logger.warning("No sources selected")
-            yield "Please select at least one news source."
+            # yield "Please select at least one news source."
+            raise gr.Error(
+                "Please select at least one news source.", duration=5)
             return
         self.logger.debug(
             f'Starting analysis with {len(sources)} sources selected')
-        yield from self.analyze_news(sources, progress)
+        pdf_results = yield from self.analyze_news(sources, progress)
+        self.logger.debug(f'Total number of News Stores {pdf_results.size}')
+        self.gather_data(pdf_results)
+        return pdf_results
 
-    def create_interface(self):
+    def create_interface(self) -> gr.Interface:
         """
         Create and return the Gradio interface for the news sentiment analysis.
 
@@ -147,28 +136,59 @@ class NewsSentimentAnalyzer:
             fn=self.news_sentiment_analysis,
 
             inputs=[
-                # gr.CheckboxGroup(["CNN", "ABC", "NPR", "NYT"], label="News Sources", info="Select News Sources", container=True),
+                gr.CheckboxGroup(["CNN", "ABC", "NPR", "NYT"], label="News Sources",
+                                 info="Select News Sources", container=True),
                 gr.Checkbox(label="CNN", value=True, info="CNN"),
                 gr.Checkbox(label="ABC", info="ABC News"),
                 gr.Checkbox(label="NPR", info="NPR News"),
                 gr.Checkbox(label="NYT", value=True, info="New York Times")
             ],
-            outputs=gr.Dataframe(
-                label="Sentiment Results",
-                headers=["Description", "Sentiment", "Confidence"],
-                min_width=300,
-                wrap=True,
-                scale=3
-            ),
+
+            outputs=[
+                gr.Dataframe(
+                    label="Sentiment Results",
+                    headers=["Description", "Sentiment", "Confidence"],
+                    min_width=300,
+                    wrap=True,
+                    scale=3
+                )
+            ],
             title="News Sentiment Analysis",
             description="Select news sources to analyze sentiment of headlines and stories.",
             show_progress=True,
             live=False
         )
 
+    def create_blocks(self) -> gr.Blocks:
+        with gr.Blocks(title="News Sentiment Analysis", fill_height=True) as demo:
+            gr.Markdown(
+                "Select at least one News Sources below to analyze sentiment of headlines and stories and then click **Run** to see the output.")
+            with gr.Row():
+                inp = [
+                    gr.Checkbox(label="CNN", value=True, info="CNN"),
+                    gr.Checkbox(label="ABC", info="ABC News"),
+                    gr.Checkbox(label="NPR", info="NPR News"),
+                    gr.Checkbox(label="NYT", value=True, info="New York Times")
+                ]
+                btn = gr.Button("Run")
+            with gr.Row():
+                out = [
+                    gr.Dataframe(
+                        label="Sentiment Results",
+                        headers=["Description", "Sentiment", "Confidence"],
+                        min_width=300,
+                        wrap=True,
+                        scale=3
+                    )
+                ]
+            btn.click(fn=self.news_sentiment_analysis,
+                      inputs=inp, outputs=out)
+        return demo
+
     def run(self):
         self.logger.info("Starting Gradio interface")
-        iface = self.create_interface()
+        # iface = self.create_interface()
+        iface = self.create_blocks()
         iface.launch()
 
 

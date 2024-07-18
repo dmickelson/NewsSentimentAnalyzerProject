@@ -41,6 +41,8 @@ dependencies = [
     "requests"
     "lxml"
     "emoji"
+    "sentence-transformers"
+    "pinecone-client"
 ]
 
 [project.optional-dependencies]
