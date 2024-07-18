@@ -26,6 +26,6 @@ When you run the script, it will start a local server and provide a URL to acces
 <!-- end-eraser-additional-content -->
 <!--- Eraser file: https://app.eraser.io/workspace/Ni40E1o4VIaUCvKZWyhj --->
 
-# Output
+# Sample Output
 
-[Sample Output](example_output.png)
+![Sample Output](example_output.png)
