@@ -19,7 +19,7 @@ When you run the script, it will start a local server and provide a URL to acces
 
 
 <!-- eraser-additional-content -->
-## Diagrams
+## Highlevel Architecture Diagram
 <!-- eraser-additional-files -->
 <a href="/README-News Sentiment Analysis Logical Architecture-1.eraserdiagram" data-element-id="TOiOsN-33paaDsb7CNCpD"><img src="/.eraser/Ni40E1o4VIaUCvKZWyhj___EEOx6FbvkCejaFb2hnr2XazjHFH2___---diagram----4a06cef18b7f618e2e1eaeeb8a284b37-News-Sentiment-Analysis-Logical-Architecture.png" alt="" data-element-id="TOiOsN-33paaDsb7CNCpD" /></a>
 <!-- end-eraser-additional-files -->
