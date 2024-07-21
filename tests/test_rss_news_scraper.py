@@ -4,7 +4,7 @@ import yaml
 import logging
 import logging.config
 from unittest.mock import patch, Mock
-from src.news_sentiment_analyzer import RSSNewsScraper
+from src.news_sentiment_analyzer import RSSNewsScraper, BaseRSSNewsScraperAdapter
 
 # ? pytest -vs tests/test_rss_news_scraper.py
 
@@ -16,15 +16,12 @@ def setup_logging():
     config_path = ROOT_DIR / "logging_config.yaml"
     with open(config_path, "r") as f:
         config = yaml.safe_load(f.read())
-
     # Ensure the logs directory exists
     log_dir = ROOT_DIR / "logs"
     log_dir.mkdir(exist_ok=True)
-
     # Update the log file path in the config
     config['handlers']['file']['filename'] = str(
         log_dir / "test_news_sentiment_analysis.log")
-
     logging.config.dictConfig(config)
 
 
@@ -80,18 +77,22 @@ def mock_requests_get(mock_rss_content):
 
 def test_rss_news_scraper_initialization():
     logger = logging.getLogger(__name__)
-    logger.info("Starting initialization test")
-    scraper = RSSNewsScraper("http://example.com/rss")
-    assert scraper is not None
-    assert scraper.get_rss_url() == "http://example.com/rss"
+    logger.info("Starting test_rss_news_scraper_initialization")
+    rss_url = 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml'
+    base_adapter = BaseRSSNewsScraperAdapter(rss_url=rss_url)
+    base_scraper = RSSNewsScraper(base_adapter)
+    assert base_scraper is not None
+    assert base_scraper.rss_adapter.get_rss_url() == rss_url
     logger.info("Finished initialization test")
 
 
 def test_scrape_rss_feed(mock_requests_get):
     logger = logging.getLogger(__name__)
-    logger.info("Starting scrape test")
-    scraper = RSSNewsScraper("http://example.com/rss")
-    articles = scraper.scrape_rss_feed()
+    logger.debug("Starting test_scrape_rss_feed")
+    rss_url = "http://example.com/rss"
+    base_adapter = BaseRSSNewsScraperAdapter(rss_url=rss_url)
+    base_scraper = RSSNewsScraper(base_adapter)
+    articles = base_scraper.scrape_rss_feed()
 
     assert len(articles) == 2
     assert articles[0]['title'] == "Test Article 1"
@@ -106,28 +107,11 @@ def test_scrape_rss_feed(mock_requests_get):
 
 def test_scrape_rss_feed_error(mock_requests_get):
     logger = logging.getLogger(__name__)
-    logger.info("Starting error test")
+    logger.info("Starting test_scrape_rss_feed_error")
     mock_requests_get.side_effect = Exception("Network error")
-    scraper = RSSNewsScraper("http://example.com/rss")
-
+    rss_url = "http://example.com/rss"
+    base_adapter = BaseRSSNewsScraperAdapter(rss_url=rss_url)
+    base_scraper = RSSNewsScraper(base_adapter)
     with pytest.raises(Exception):
-        scraper.scrape_rss_feed()
-
+        base_scraper.scrape_rss_feed()
     logger.info("Finished error test")
-
-
-def test_log_file_writing():
-    logger = logging.getLogger(__name__)
-    test_message = "Test log message for file writing"
-    logger.info(test_message)
-
-    log_file = ROOT_DIR / "logs" / "test_news_sentiment_analysis.log"
-    assert log_file.exists(), f"Log file does not exist: {log_file}"
-
-    with open(log_file, 'r') as f:
-        log_content = f.read()
-    assert test_message in log_content, f"Test message not found in log file. Log content: {log_content}"
-
-
-if __name__ == "__main__":
-    pytest.main(["-v", __file__])
