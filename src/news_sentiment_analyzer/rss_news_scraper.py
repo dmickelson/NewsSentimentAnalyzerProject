@@ -1,3 +1,4 @@
+import logging
 from bs4 import BeautifulSoup
 import requests
 import logging
@@ -45,7 +46,7 @@ class StringCleaner():
         return clean_string
 
 
-class RSSNewsScraper:
+class RSSNewsScraper():
     """
     A class for scraping news articles from RSS feeds using the Adapter pattern.
 
@@ -64,8 +65,6 @@ class RSSNewsScraper:
         Args:
             rss_adapter (object): The RSS adapter to use for scraping.
         """
-        # config_path = Path(__file__).parents[2] / "logging_config.yaml"
-        # self.load_logging_config(config_path)
         self.logger = logging.getLogger(__name__)
         self.logger.debug(f"Initiating Class {__name__}")
         self.rss_adapter = rss_adapter
@@ -83,28 +82,6 @@ class RSSNewsScraper:
             self.logger.debug(
                 f'RSSNewsScraper.scrape_rss_feed Results Len: {len(results)}')
         return results
-
-    # @staticmethod
-    # def load_logging_config(config_path: Union[str, Path]) -> None:
-    #     '''
-    #     Load the logging configuration from a YAML file.
-
-    #     Raises:
-    #         FileNotFoundError: If the configuration file is not found.
-    #         yaml.YAMLError: If there's an error parsing the YAML file.
-    #     '''
-    #     config_path = Path(config_path)
-    #     if not config_path.is_file():
-    #         raise FileNotFoundError(
-    #             f"Logging config file not found: {config_path}")
-
-    #     try:
-    #         with open(config_path, 'r') as f:
-    #             log_config = yaml.safe_load(f)
-    #             logging.config.dictConfig(log_config)
-    #     except yaml.YAMLError as ex:
-    #         raise yaml.YAMLError(
-    #             f"Error parsing logging config file: {str(ex)}")
 
 
 class BaseRSSNewsScraperAdapter():
@@ -146,8 +123,8 @@ class BaseRSSNewsScraperAdapter():
         """
         articles = []
         try:
-            self.logger.debug(f'Getting RSS feed from: {self.__rss_url}')
-            response = requests.get(self.__rss_url, timeout=10)
+            self.logger.debug(f'Getting RSS feed from: {self.get_rss_url()}')
+            response = requests.get(self.get_rss_url(), timeout=10)
             response.raise_for_status()
         except requests.RequestException as ex:
             self.logger.exception(f'Error getting RSS feed: {str(ex)}')
@@ -155,13 +132,13 @@ class BaseRSSNewsScraperAdapter():
 
         soup = BeautifulSoup(response.content, 'xml')
         if not soup:
-            self.logger.error(f'No XML content found at {self.__rss_url}')
+            self.logger.error(f'No XML content found at {self.get_rss_url()}')
             return None
 
         # * Find all the "item" elements (commonly used in RSS feeds)
         items = soup.find_all('item')
         if not items or len(items) == 0:
-            self.logger.error(f'No items found at {self.__rss_url}')
+            self.logger.error(f'No items found at {self.get_rss_url()}')
             return None
 
         # * Iterate over each item to extract the data you need
@@ -213,7 +190,7 @@ class BaseRSSNewsScraperAdapter():
         return self.__rss_url
 
 
-class NYTRSSNewsScraperAdapter():
+class NYTRSSNewsScraperAdapter(BaseRSSNewsScraperAdapter):
     """
     Adapter class for scraping New York Times RSS feed.
 
@@ -222,16 +199,17 @@ class NYTRSSNewsScraperAdapter():
 
     Attributes:
         logger (logging.Logger): Logger instance for the class.
-        __rss_url (str): The URL of the NYT RSS feed.
+        rss_url (str): The URL of the NYT News RSS feed.
     """
-    __rss_url = 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml'
 
     def __init__(self):
         """
         Initialize the NYTRSSNewsScraperAdapter.
         """
+        rss_url = 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml'
         self.logger = logging.getLogger(__name__)
         self.logger.debug(f"Initiating Class {__name__}")
+        super().__init__(rss_url)
 
     def scrape_rss_feed(self) -> List[Dict[str, str]]:
         """
@@ -246,8 +224,8 @@ class NYTRSSNewsScraperAdapter():
         """
         articles = []
         try:
-            self.logger.debug(f'Getting RSS feed from: {self.__rss_url}')
-            response = requests.get(self.__rss_url, timeout=10)
+            self.logger.debug(f'Getting RSS feed from: {self.get_rss_url()}')
+            response = requests.get(self.get_rss_url(), timeout=10)
             response.raise_for_status()
         except requests.RequestException as ex:
             self.logger.exception(f'Error getting RSS feed: {str(ex)}')
@@ -255,13 +233,13 @@ class NYTRSSNewsScraperAdapter():
 
         soup = BeautifulSoup(response.content, 'xml')
         if not soup:
-            self.logger.error(f'No XML content found at {self.__rss_url}')
+            self.logger.error(f'No XML content found at {self.get_rss_url()}')
             return None
 
         # * Find all the "item" elements (commonly used in RSS feeds)
         items = soup.find_all('item')
         if not items or len(items) == 0:
-            self.logger.error(f'No items found at {self.__rss_url}')
+            self.logger.error(f'No items found at {self.get_rss_url()}')
             return None
 
         # * Iterate over each item to extract the data you need
@@ -291,3 +269,98 @@ class NYTRSSNewsScraperAdapter():
 
         self.logger.debug(f'Scraped {len(articles)} articles')
         return articles
+
+
+class ABCRSSNewsScraperAdapter(BaseRSSNewsScraperAdapter):
+    """
+    Adapter class for scraping ABC News RSS feed.
+
+    This class provides specific functionality to scrape the ABC News RSS feed and
+    extract article information.
+
+    Attributes:
+        logger (Logger): Logger instance for the class.
+        rss_url (str): The URL of the ABC News RSS feed.
+    """
+
+    def __init__(self):
+        """
+        Initialize the ABCRSSNewsScraperAdapter.
+
+        Args:
+            rss_url (str): The URL of the ABC News RSS feed to scrape.
+        """
+        rss_url = "https://abcnews.go.com/abcnews/topstories"
+        self.logger = logging.getLogger(__name__)
+        self.logger.debug(f"Initiating Class {__name__}")
+        super().__init__(rss_url)
+
+    def scrape_rss_feed(self) -> list[dict[str, str]]:
+        """
+        Scrape the ABC News RSS feed and extract article information.
+
+        Returns:
+            List[Dict[str, str]]: A list of dictionaries, each containing
+            information about a single article (title, link, description).
+
+        Raises:
+            requests.RequestException: If there's an error fetching the RSS feed.
+        """
+        articles = []
+        try:
+            self.logger.debug(f'Getting RSS feed from: {self.get_rss_url()}')
+            response = requests.get(self.get_rss_url(), timeout=10)
+            response.raise_for_status()
+        except requests.RequestException as ex:
+            self.logger.exception(f'Error getting RSS feed: {str(ex)}')
+            raise
+
+        soup = BeautifulSoup(response.content, 'xml')
+        if not soup:
+            self.logger.error(f'No XML content found at {self.get_rss_url()}')
+            return []
+
+        # Find all the "item" elements (commonly used in RSS feeds)
+        items = soup.find_all('item')
+        if not items:
+            self.logger.error(f'No items found at {self.get_rss_url()}')
+            return []
+
+        # Iterate over each item to extract the data you need
+        for item in items:
+            title = StringCleaner.clean_string(item.find('title').text)
+            link = StringCleaner.clean_string(item.find('link').text)
+            description = StringCleaner.clean_string(
+                item.find('description').text)
+
+            # Handle CDATA sections
+            title = self._extract_cdata(title)
+            link = self._extract_cdata(link)
+            description = self._extract_cdata(description)
+
+            story = {
+                'title': title,
+                'link': link,
+                'description': description
+            }
+            self.logger.debug(f'---')
+            self.logger.debug(f'Story: {story}')
+            # Add it to the list of articles
+            articles.append(story)
+
+        self.logger.debug(f'Scraped {len(articles)} articles')
+        return articles
+
+    def _extract_cdata(self, text: str) -> str:
+        """
+        Extract text from CDATA sections.
+
+        Args:
+            text (str): The text potentially containing CDATA sections.
+
+        Returns:
+            str: The extracted text without the CDATA tags.
+        """
+        if text.startswith('<![CDATA[') and text.endswith(']]>'):
+            text = text[9:-3]
+        return text

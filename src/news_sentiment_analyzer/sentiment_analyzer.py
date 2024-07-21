@@ -5,6 +5,17 @@ from pathlib import Path
 from transformers import pipeline
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
 
+config_path = Path(__file__).parents[2] / "logging_config.yaml"
+config_path = Path(config_path)
+if not config_path.is_file():
+    raise FileNotFoundError(f"Logging config file not found: {config_path}")
+try:
+    with open(config_path, 'r') as f:
+        log_config = yaml.safe_load(f)
+        logging.config.dictConfig(log_config)
+except yaml.YAMLError as ex:
+    raise yaml.YAMLError(f"Error parsing logging config file: {str(ex)}")
+
 
 class SentimentAnalyzer:
     '''
@@ -20,7 +31,7 @@ class SentimentAnalyzer:
         nlp (pipeline): Sentiment analysis pipeline.
     '''
 
-    def __init__(self, config_path: Union[str, Path] = None):
+    def __init__(self):
         """
         Initialize the SentimentAnalyzer with logging configuration and pre-trained model.
 
@@ -31,12 +42,8 @@ class SentimentAnalyzer:
         Raises:
             FileNotFoundError: If the logging configuration file is not found.
         """
-        if config_path is None:
-            config_path = Path(__file__).parents[2] / "logging_config.yaml"
-        self.load_logging_config(config_path)
         self.logger = logging.getLogger(__name__)
         self.logger.debug(f"Initiating Class {__name__}")
-
         model_name = "distilbert-base-uncased-finetuned-sst-2-english"
 
         try:
@@ -52,33 +59,6 @@ class SentimentAnalyzer:
             self.logger.error(
                 f"Error loading model or creating pipeline: {str(ex)}")
             raise
-
-    def load_logging_config(self, config_path: Union[str, Path]):
-        """
-        Load the logging configuration from a YAML file.
-
-        Args:
-            config_path (Union[str, Path]): Path to the logging configuration file.
-
-        Raises:
-            FileNotFoundError: If the configuration file is not found.
-            yaml.YAMLError: If there's an error parsing the YAML file.
-        """
-        config_path = Path(config_path)
-        if not config_path.is_file():
-            self.logger.error(f"Logging config file not found: {config_path}")
-            raise FileNotFoundError(
-                f"Logging config file not found: {config_path}")
-
-        try:
-            with open(config_path, 'r') as f:
-                log_config = yaml.safe_load(f)
-                logging.config.dictConfig(log_config)
-        except yaml.YAMLError as ex:
-            self.logger.exception(
-                f"Error parsing logging config file: {str(ex)}")
-            raise yaml.YAMLError(
-                f"Error parsing logging config file: {str(ex)}")
 
     def get_sentiment(self, text: Union[str, List[str]]) -> Union[Dict, List[Dict]]:
         """
@@ -136,7 +116,7 @@ class SentimentAnalyzer:
         dict_result = {
             'text': text,
             'sentiment': result['label'],
-            'confidence': result['score']
+            'confidence': round(result['score'], 3)
         }
         self.logger.debug(f'result: {dict_result}')
         return dict_result
