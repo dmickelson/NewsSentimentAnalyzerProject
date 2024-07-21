@@ -4,3 +4,5 @@ news_sentiment_analyzer/__pycache__/
 src/news_sentiment_analyzer/__pycache__/
 logs/
 src/news_sentiment_analyzer/key_pinecone_api.txt
+src/__init__.py
+src/__pycache__/
